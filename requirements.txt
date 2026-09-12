@@ -17,6 +17,14 @@ python-dotenv>=1.0
 fastapi>=0.110.0
 uvicorn>=0.28.0
 
+# Auth & MongoDB (Phase 1–2 additions)
+motor>=3.3
+pyjwt>=2.8
+passlib[bcrypt]>=1.7
+bcrypt==4.0.1                 # pinned for passlib 1.7 compatibility
+python-multipart>=0.0.9
+pydantic[email]>=2.9         # EmailStr support in auth routes
+
 # Debug Dashboard
 streamlit>=1.30
 
