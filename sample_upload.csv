@@ -1,0 +1,6 @@
+transaction_id,timestamp,merchant,merchant_category,amount,card_num,device_id,declined
+TXN-DEMO-001,2026-01-01 00:00:37,fraud_Kihn_Inc,grocery_pos,12.7,4532_6228_9097,DEV_86370,0
+TXN-DEMO-002,2026-01-01 00:02:06,fraud_Bednar_Inc,shopping_net,77.96,4532_1510_3368,DEV_75301,0
+TXN-DEMO-003,2026-01-01 00:03:29,fraud_Gould_Group,shopping_net,845.21,4532_7798_6552,DEV_98607,0
+TXN-DEMO-004,2026-01-01 00:05:12,fraud_Rippin_LLC,misc_pos,45.10,4532_8891_1029,DEV_11029,0
+TXN-DEMO-005,2026-01-01 00:08:44,fraud_Schultz_Inc,gas_transport,120.00,4532_3341_8892,DEV_49821,1

@@ -18,6 +18,9 @@ import asyncio
 from typing import List, Optional, Dict, Any
 from contextlib import asynccontextmanager
 
+from dotenv import load_dotenv
+load_dotenv()  # loads .env from project root
+
 from fastapi import FastAPI, HTTPException, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -29,6 +32,11 @@ if _PROJECT_ROOT not in sys.path:
 
 from src.db import get_live_transactions, get_transaction_by_id, save_scored_transaction, load_history_from_csv
 from src.person_a.simulate_live_stream import process_single_event
+
+# New routers (Phase 1 & 2)
+from src.routers.auth_router import router as auth_router
+from src.routers.transactions_router import router as transactions_router
+from src import mongo_db
 
 THRESHOLD_JSON = os.path.join(_PROJECT_ROOT, "data", "models", "threshold_analysis.json")
 INJECTED_CSV = os.path.join(_PROJECT_ROOT, "data", "processed", "injected_transactions.csv")
@@ -60,7 +68,19 @@ async def lifespan(app: FastAPI):
         seed_initial_demo_data()
     except Exception as e:
         print(f"[api_server] Startup seed warning: {e}")
+
+    # Initialise Motor client (validates MONGO_URI is set)
+    try:
+        mongo_db.get_client()
+        print("[api_server] Motor/MongoDB client initialised.")
+    except Exception as e:
+        print(f"[api_server] MongoDB init warning (non-fatal): {e}")
+
     yield
+
+    # Graceful Motor shutdown
+    mongo_db.close_client()
+    print("[api_server] Motor/MongoDB client closed.")
 
 
 app = FastAPI(
@@ -78,6 +98,10 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# ── Register routers ──────────────────────────────────────────────────────────
+app.include_router(auth_router)
+app.include_router(transactions_router)
 
 
 @app.get("/")
