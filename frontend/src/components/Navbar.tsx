@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { ShieldAlert, Activity, Sliders, Settings, Lock } from 'lucide-react';
+import { ShieldAlert, Activity, Sliders, Settings, Lock, History } from 'lucide-react';
 
 export const Navbar: React.FC = () => {
   const location = useLocation();
@@ -8,6 +8,7 @@ export const Navbar: React.FC = () => {
   const navItems = [
     { path: '/', label: 'Live Stream Feed', icon: Activity },
     { path: '/cost-curve', label: 'Threshold Cost Curve', icon: Sliders },
+    { path: '/batch-history', label: 'Batch History', icon: History },
     { path: '/settings', label: 'Settings & Scope', icon: Settings },
   ];
 

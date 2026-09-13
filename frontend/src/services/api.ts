@@ -1,12 +1,20 @@
 import axios from 'axios';
-import type { ScoredTransaction, StreamResponse, ThresholdAnalysisResponse } from '../types';
+import type {
+  BatchDetailResponse,
+  BatchListResponse,
+  ScoredTransaction,
+  StreamResponse,
+  ThresholdAnalysisResponse,
+} from '../types';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
 
 const client = axios.create({
   baseURL: API_BASE,
-  timeout: 10000,
+  timeout: 15000,
 });
+
+// ── Unauthenticated endpoints (existing, unchanged) ───────────────────────────
 
 export const fetchLiveTransactions = async (limit: number = 50): Promise<StreamResponse> => {
   try {
@@ -46,7 +54,56 @@ export const triggerSeedBatch = async (): Promise<void> => {
   }
 };
 
-// Fallback Data for offline / initial development resilience
+// ── Authenticated helpers ─────────────────────────────────────────────────────
+
+function authHeaders(token: string) {
+  return { Authorization: `Bearer ${token}` };
+}
+
+// ── Phase 4: Batch history endpoints ─────────────────────────────────────────
+
+/**
+ * Fetch the list of upload batches belonging to the authenticated user.
+ * Returns batches sorted by created_at descending (most recent first).
+ */
+export const fetchBatches = async (token: string): Promise<BatchListResponse> => {
+  const res = await client.get<BatchListResponse>('/transactions/batches', {
+    headers: authHeaders(token),
+  });
+  return res.data;
+};
+
+/**
+ * Fetch all transactions + scores + personal_context for a single batch.
+ * Throws on 403 (batch belongs to another user) or 404.
+ */
+export const fetchBatchDetail = async (
+  token: string,
+  batchId: string,
+): Promise<BatchDetailResponse> => {
+  const res = await client.get<BatchDetailResponse>(`/transactions/batches/${batchId}`, {
+    headers: authHeaders(token),
+  });
+  return res.data;
+};
+
+/**
+ * Upload a CSV file and score all rows.
+ * Returns the batch summary including personal_context per row.
+ */
+export const uploadCsv = async (token: string, file: File): Promise<Record<string, unknown>> => {
+  const form = new FormData();
+  form.append('file', file);
+  const res = await client.post('/transactions/upload-csv', form, {
+    headers: {
+      ...authHeaders(token),
+      'Content-Type': 'multipart/form-data',
+    },
+  });
+  return res.data;
+};
+
+// ── Fallback Data for offline / initial development resilience ────────────────
 function getFallbackStreamData(): StreamResponse {
   return {
     count: 5,
