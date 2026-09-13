@@ -11,6 +11,24 @@ export interface CohortContext {
   historical_fraud_rate?: number;
 }
 
+// Phase 3: per-user personal context (stored alongside each transaction in Mongo)
+export interface PersonalContext {
+  insufficient_history?: boolean;
+  amount_zscore?: number;
+  category_match?: boolean;
+  time_match?: boolean;
+}
+
+// Phase 3: aggregate user baseline stats (returned from GET /transactions/batches/*)
+export interface UserBaseline {
+  insufficient_history?: boolean;
+  avg_amount?: number;
+  stddev_amount?: number;
+  top_categories?: string[];
+  typical_hours?: number[];
+  transaction_count?: number;
+}
+
 export interface ScoredTransaction {
   id?: number;
   transaction_id: string;
@@ -30,6 +48,8 @@ export interface ScoredTransaction {
   estimated_fp_cost?: number;
   estimated_fraud_caught?: number;
   created_at?: string;
+  // Phase 3: personal context attached after scoring
+  personal_context?: PersonalContext;
 }
 
 export interface ThresholdCurvePoint {
@@ -59,5 +79,23 @@ export interface ThresholdAnalysisResponse {
 
 export interface StreamResponse {
   count: number;
+  transactions: ScoredTransaction[];
+}
+
+// Phase 4: batch history types
+export interface BatchSummary {
+  batch_id: string;
+  created_at: string; // ISO timestamp string
+  row_count: number;
+  flagged_count: number;
+}
+
+export interface BatchListResponse {
+  batches: BatchSummary[];
+}
+
+export interface BatchDetailResponse {
+  batch_id: string;
+  transaction_count: number;
   transactions: ScoredTransaction[];
 }
