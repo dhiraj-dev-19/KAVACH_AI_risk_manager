@@ -36,7 +36,7 @@ if _PROJECT_ROOT not in sys.path:
 
 load_dotenv(os.path.join(_PROJECT_ROOT, ".env"))
 
-MODEL_NAME = "gemini-2.5-flash"
+MODEL_NAME = "gemini-3.5-flash"
 
 
 def _get_genai_client():
@@ -52,7 +52,7 @@ def _get_genai_client():
             api_key=api_key,
             http_options=types.HttpOptions(
                 retry_options=types.HttpRetryOptions(
-                    attempts=3,
+                    attempts=1,
                     initial_delay=1.5,
                     max_delay=10.0,
                     http_status_codes=[429, 500, 502, 503, 504],
@@ -94,19 +94,27 @@ def _clean_json_text(text: str) -> str:
 def _call_gemini_vision(
     client, image_bytes: bytes, prompt: str, mime_type: str
 ) -> Optional[str]:
-    """Invoke Gemini vision with prompt and image part."""
+    """Invoke Gemini vision with prompt and image part, falling back to gemini-1.5-flash on error."""
     try:
         from google.genai import types
-
         image_part = types.Part.from_bytes(data=image_bytes, mime_type=mime_type)
-        response = client.models.generate_content(
-            model=MODEL_NAME,
-            contents=[prompt, image_part],
-        )
+        
+        try:
+            response = client.models.generate_content(
+                model=MODEL_NAME,
+                contents=[prompt, image_part],
+            )
+        except Exception as e:
+            print(f"[screenshot_parser] Primary model {MODEL_NAME} failed ({e}), falling back to gemini-2.5-flash")
+            response = client.models.generate_content(
+                model="gemini-2.5-flash",
+                contents=[prompt, image_part],
+            )
+
         if response and response.text:
             return response.text.strip()
     except Exception as e:
-        print(f"[screenshot_parser] Gemini vision error: {e}")
+        print(f"[screenshot_parser] Gemini vision fallback error: {e}")
     return None
 
 

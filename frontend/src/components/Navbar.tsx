@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { ShieldAlert, Activity, Sliders, Settings, Lock, History, LogIn, LogOut, UserCheck } from 'lucide-react';
+import { ShieldAlert, Activity, Sliders, Settings, Lock, History, LogIn, LogOut, UserCheck, UploadCloud } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 export const Navbar: React.FC = () => {
@@ -10,10 +10,12 @@ export const Navbar: React.FC = () => {
 
   const navItems = [
     { path: '/', label: 'Live Stream Feed', icon: Activity },
+    { path: '/upload', label: 'Upload', icon: UploadCloud },
     { path: '/cost-curve', label: 'Threshold Cost Curve', icon: Sliders },
     { path: '/batch-history', label: 'Batch History', icon: History },
     { path: '/settings', label: 'Settings & Scope', icon: Settings },
   ];
+
 
   const handleSignOut = () => {
     setToken(null);

@@ -101,14 +101,23 @@ export const fetchBatchDetail = async (
   return res.data;
 };
 
+export interface UploadResponse {
+  batch_id?: string;
+  upload_batch_id?: string;
+  rows_processed: number;
+  rows_errored?: number;
+  results_summary?: any[];
+  errors?: any[];
+}
+
 /**
  * Upload a CSV file and score all rows.
  * Returns the batch summary including personal_context per row.
  */
-export const uploadCsv = async (token: string, file: File): Promise<Record<string, unknown>> => {
+export const uploadCsv = async (token: string, file: File): Promise<UploadResponse> => {
   const form = new FormData();
   form.append('file', file);
-  const res = await client.post('/transactions/upload-csv', form, {
+  const res = await client.post<UploadResponse>('/transactions/upload-csv', form, {
     headers: {
       ...authHeaders(token),
       'Content-Type': 'multipart/form-data',
@@ -116,6 +125,37 @@ export const uploadCsv = async (token: string, file: File): Promise<Record<strin
   });
   return res.data;
 };
+
+/**
+ * Upload a text-based PDF bank statement.
+ */
+export const uploadPdf = async (token: string, file: File): Promise<UploadResponse> => {
+  const form = new FormData();
+  form.append('file', file);
+  const res = await client.post<UploadResponse>('/transactions/upload-pdf', form, {
+    headers: {
+      ...authHeaders(token),
+      'Content-Type': 'multipart/form-data',
+    },
+  });
+  return res.data;
+};
+
+/**
+ * Upload a payment screenshot image (PNG, JPEG, WebP).
+ */
+export const uploadScreenshot = async (token: string, file: File): Promise<UploadResponse> => {
+  const form = new FormData();
+  form.append('file', file);
+  const res = await client.post<UploadResponse>('/transactions/upload-screenshot', form, {
+    headers: {
+      ...authHeaders(token),
+      'Content-Type': 'multipart/form-data',
+    },
+  });
+  return res.data;
+};
+
 
 // ── Fallback Data for offline / initial development resilience ────────────────
 function getFallbackStreamData(): StreamResponse {

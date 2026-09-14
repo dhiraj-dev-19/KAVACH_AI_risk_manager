@@ -15,10 +15,106 @@ Design:
 """
 
 import io
+import json
+import os
 import re
+import sys
 from typing import Any, Dict, List, Union
 
+from dotenv import load_dotenv
 import pdfplumber
+
+_SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+_PROJECT_ROOT = os.path.abspath(os.path.join(_SCRIPT_DIR, "..", ".."))
+if _PROJECT_ROOT not in sys.path:
+    sys.path.insert(0, _PROJECT_ROOT)
+
+load_dotenv(os.path.join(_PROJECT_ROOT, ".env"))
+MODEL_NAME = "gemini-3.5-flash"
+
+def _get_genai_client():
+    api_key = os.getenv("GEMINI_API_KEY") or os.getenv("GOOGLE_API_KEY")
+    if not api_key:
+        return None
+    try:
+        from google import genai
+        from google.genai import types
+
+        return genai.Client(
+            api_key=api_key,
+            http_options=types.HttpOptions(
+                retry_options=types.HttpRetryOptions(
+                    attempts=1,
+                    initial_delay=1.5,
+                    max_delay=10.0,
+                    http_status_codes=[429, 500, 502, 503, 504],
+                )
+            ),
+        )
+    except Exception as e:
+        print(f"[pdf_parser] Gemini client init warning: {e}")
+        return None
+
+def _clean_json_text(text: str) -> str:
+    text = text.strip()
+    code_block = re.search(r"```(?:json)?\s*([\s\S]*?)\s*```", text)
+    if code_block:
+        return code_block.group(1).strip()
+    brace_match = re.search(r"(\[[\s\S]*\])", text)
+    if brace_match:
+        return brace_match.group(1).strip()
+    return text
+
+def _call_gemini_fallback(file_bytes: bytes) -> List[Dict[str, Any]]:
+    client = _get_genai_client()
+    if not client:
+        return []
+    
+    try:
+        from google.genai import types
+        pdf_part = types.Part.from_bytes(data=file_bytes, mime_type="application/pdf")
+        prompt = (
+            "You are an automated transaction parser. Examine this PDF bank statement "
+            "and extract ALL transaction rows into a single JSON array of objects.\n\n"
+            "Each object must have exactly these keys:\n"
+            "- transaction_id: (string, e.g. UTR or null)\n"
+            "- timestamp: (string, YYYY-MM-DD HH:MM:SS or null)\n"
+            "- merchant: (string, the merchant name)\n"
+            "- merchant_category: (string, category or null)\n"
+            "- amount: (number, float)\n"
+            "- card_num: (string, or null)\n"
+            "- device_id: (string, or null)\n"
+            "- declined: (boolean, 1/true if failed, 0/false if success)\n\n"
+            "Output ONLY the JSON array without markdown formatting."
+        )
+        try:
+            response = client.models.generate_content(
+                model=MODEL_NAME,
+                contents=[prompt, pdf_part],
+            )
+        except Exception as e:
+            print(f"[pdf_parser] Primary model {MODEL_NAME} failed ({e}), falling back to gemini-2.5-flash")
+            response = client.models.generate_content(
+                model="gemini-3.6-flash",
+                contents=[prompt, pdf_part],
+            )
+        if response and response.text:
+            cleaned = _clean_json_text(response.text)
+            parsed = json.loads(cleaned)
+            if isinstance(parsed, list):
+                clean_rows = []
+                for row in parsed:
+                    clean_row = {}
+                    for col in REQUIRED_COLUMNS:
+                        val = row.get(col)
+                        clean_row[col] = _clean_cell(col, val) if val is not None else None
+                        
+                    if _is_valid_row(clean_row):
+                        clean_rows.append(clean_row)
+                return clean_rows
+    except Exception as e:
+        print(f"[pdf_parser] Gemini fallback error: {e}")
+    return []
 
 
 # The 8 raw columns the scoring pipeline expects per transaction row
@@ -60,6 +156,10 @@ def extract_transactions_from_pdf(
 
     # If pdfplumber extracted no text at all → scanned / image-only PDF
     if not all_text.strip():
+        # Fallback to Gemini 1.5 Pro for scanned PDFs
+        gemini_rows = _call_gemini_fallback(file_bytes)
+        if gemini_rows:
+            return gemini_rows
         return {"error": "scanned_pdf_not_supported"}
 
     # ── 2. Try table-based extraction first ───────────────────────────────────
@@ -71,6 +171,11 @@ def extract_transactions_from_pdf(
     rows = _try_line_parsing(all_text)
     if rows:
         return rows
+
+    # ── 4. Fall back to Gemini for unparseable complex layouts ────────────────
+    gemini_rows = _call_gemini_fallback(file_bytes)
+    if gemini_rows:
+        return gemini_rows
 
     # Could not confidently parse — return empty list per spec
     return []

@@ -9,6 +9,7 @@ import { Settings } from './pages/Settings';
 import { BatchHistory } from './pages/BatchHistory';
 import { LoginPage } from './pages/LoginPage';
 import { SignupPage } from './pages/SignupPage';
+import { UploadPage } from './pages/UploadPage';
 
 export const App: React.FC = () => {
   return (
@@ -21,6 +22,7 @@ export const App: React.FC = () => {
               <Route path="/" element={<LiveFeed />} />
               <Route path="/login" element={<LoginPage />} />
               <Route path="/signup" element={<SignupPage />} />
+              <Route path="/upload" element={<UploadPage />} />
               <Route path="/cost-curve" element={<CostCurve />} />
               <Route path="/transactions/:id" element={<TransactionDetail />} />
               <Route path="/settings" element={<Settings />} />
