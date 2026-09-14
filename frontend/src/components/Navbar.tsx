@@ -1,9 +1,12 @@
 import React from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import { ShieldAlert, Activity, Sliders, Settings, Lock, History } from 'lucide-react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { ShieldAlert, Activity, Sliders, Settings, Lock, History, LogIn, LogOut, UserCheck } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 
 export const Navbar: React.FC = () => {
   const location = useLocation();
+  const navigate = useNavigate();
+  const { token, setToken } = useAuth();
 
   const navItems = [
     { path: '/', label: 'Live Stream Feed', icon: Activity },
@@ -11,6 +14,11 @@ export const Navbar: React.FC = () => {
     { path: '/batch-history', label: 'Batch History', icon: History },
     { path: '/settings', label: 'Settings & Scope', icon: Settings },
   ];
+
+  const handleSignOut = () => {
+    setToken(null);
+    navigate('/');
+  };
 
   return (
     <header className="bg-slate-900/90 backdrop-blur border-b border-slate-800 sticky top-0 z-40 text-slate-100">
@@ -48,11 +56,38 @@ export const Navbar: React.FC = () => {
           })}
         </nav>
 
-        <div className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-emerald-950/60 border border-emerald-800/50 text-emerald-400 text-xs font-medium">
-          <Lock className="w-3.5 h-3.5" />
-          <span>Strictly Defense-Only</span>
+        <div className="hidden md:flex items-center gap-3">
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-emerald-950/60 border border-emerald-800/50 text-emerald-400 text-xs font-medium">
+            <Lock className="w-3.5 h-3.5" />
+            <span>Strictly Defense-Only</span>
+          </div>
+
+          {token ? (
+            <div className="flex items-center gap-2">
+              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-950/60 border border-blue-800/50 text-blue-400 text-xs font-medium">
+                <UserCheck className="w-3.5 h-3.5" />
+                <span>Signed in</span>
+              </div>
+              <button
+                onClick={handleSignOut}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-medium border border-slate-700 transition"
+              >
+                <LogOut className="w-3.5 h-3.5" />
+                <span>Sign out</span>
+              </button>
+            </div>
+          ) : (
+            <Link
+              to="/login"
+              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold shadow-sm transition"
+            >
+              <LogIn className="w-3.5 h-3.5" />
+              <span>Sign in</span>
+            </Link>
+          )}
         </div>
       </div>
     </header>
   );
 };
+

@@ -1,5 +1,6 @@
 import axios from 'axios';
 import type {
+  AuthResponse,
   BatchDetailResponse,
   BatchListResponse,
   ScoredTransaction,
@@ -13,6 +14,19 @@ const client = axios.create({
   baseURL: API_BASE,
   timeout: 15000,
 });
+
+// ── Auth endpoints ─────────────────────────────────────────────────────────────
+
+export const loginUser = async (credentials: { email: string; password: string }): Promise<AuthResponse> => {
+  const res = await client.post<AuthResponse>('/auth/login', credentials);
+  return res.data;
+};
+
+export const signupUser = async (credentials: { email: string; password: string }): Promise<AuthResponse> => {
+  const res = await client.post<AuthResponse>('/auth/signup', credentials);
+  return res.data;
+};
+
 
 // ── Unauthenticated endpoints (existing, unchanged) ───────────────────────────
 

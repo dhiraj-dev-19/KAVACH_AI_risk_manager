@@ -7,6 +7,8 @@ import { CostCurve } from './pages/CostCurve';
 import { TransactionDetail } from './pages/TransactionDetail';
 import { Settings } from './pages/Settings';
 import { BatchHistory } from './pages/BatchHistory';
+import { LoginPage } from './pages/LoginPage';
+import { SignupPage } from './pages/SignupPage';
 
 export const App: React.FC = () => {
   return (
@@ -17,6 +19,8 @@ export const App: React.FC = () => {
           <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
             <Routes>
               <Route path="/" element={<LiveFeed />} />
+              <Route path="/login" element={<LoginPage />} />
+              <Route path="/signup" element={<SignupPage />} />
               <Route path="/cost-curve" element={<CostCurve />} />
               <Route path="/transactions/:id" element={<TransactionDetail />} />
               <Route path="/settings" element={<Settings />} />

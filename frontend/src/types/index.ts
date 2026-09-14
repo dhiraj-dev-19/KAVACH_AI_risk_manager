@@ -99,3 +99,9 @@ export interface BatchDetailResponse {
   transaction_count: number;
   transactions: ScoredTransaction[];
 }
+
+export interface AuthResponse {
+  access_token: string;
+  token_type: string;
+}
+
