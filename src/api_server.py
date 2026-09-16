@@ -38,6 +38,7 @@ from src.routers.auth_router import router as auth_router
 from src.routers.transactions_router import router as transactions_router
 from src.routers.pdf_router import router as pdf_router
 from src.routers.screenshot_router import router as screenshot_router
+from src.routers.statement_router import router as statement_router
 from src import mongo_db
 
 THRESHOLD_JSON = os.path.join(_PROJECT_ROOT, "data", "models", "threshold_analysis.json")
@@ -106,6 +107,7 @@ app.include_router(auth_router)
 app.include_router(transactions_router)
 app.include_router(pdf_router)
 app.include_router(screenshot_router)
+app.include_router(statement_router)
 
 
 @app.get("/")

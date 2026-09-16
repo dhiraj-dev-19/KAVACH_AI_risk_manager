@@ -137,6 +137,7 @@ export const uploadPdf = async (token: string, file: File): Promise<UploadRespon
       ...authHeaders(token),
       'Content-Type': 'multipart/form-data',
     },
+    timeout: 60000,
   });
   return res.data;
 };
@@ -152,6 +153,7 @@ export const uploadScreenshot = async (token: string, file: File): Promise<Uploa
       ...authHeaders(token),
       'Content-Type': 'multipart/form-data',
     },
+    timeout: 60000,
   });
   return res.data;
 };
