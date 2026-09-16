@@ -59,6 +59,17 @@ This system is **strictly defense-only**. The decision engine action set is cons
 
 ---
 
+## 🏦 Dynamic Statement Upload Pipeline
+
+The system includes a robust data ingestion pipeline designed for real-world user uploads, capable of handling messy, unstructured bank statements:
+
+- **Heuristic CSV Parsing**: Dynamically detects the start of transaction tables, skips headers/preambles, drops summary/footer rows, and normalizes column headers using a centralized schema mapper.
+- **PDF Extraction**: Extracts transaction grids from text-based bank statement PDFs automatically.
+- **Image/Screenshot Fallback (OCR)**: For non-text PDFs and screenshots, falls back to a Gemini-powered Vision extraction layer to cleanly parse transactions into the normalized schema.
+- **2-Step "Extract & Confirm" API**: Separates extraction (`/statements/extract`) from scoring/persistence (`/statements/confirm`) to allow UI previews, user corrections, and transparent reporting of dropped footer rows.
+
+---
+
 ## ⚡ Quick Start
 
 ### 1. Requirements Setup
